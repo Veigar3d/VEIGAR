@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="VEIGAR: View-consistent Explicit Inpainting and Geometry Alignment for 3D object Removal.">
+  <meta name="keywords" content="Image Inpainting">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VEIGAR</title>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+<!--  <link rel="icon" href="./static/images/favicon.svg">-->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+
+  </div>
+</nav>
+
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">VEIGAR: View-consistent Explicit Inpainting and Geometry Alignment for 3D object Removal
+          </h1>
+          <!-- <h3 class="title is-3 publication-title">NeurIPS 2025</h3> -->
+          <div class="is-size-5 publication-authors">
+            <!-- <span class="author-block">
+              Nguyen Do Pham Khai<sup>1,2,3</sup>,
+            </span> -->
+          </div>
+
+          <!-- <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>MIT, <sup>2</sup>ETH Zurich, <sup>3</sup>HCMUT</span>
+          </div> -->
+
+<!--          <div class="is-size-6 publication-authors">-->
+<!--            <span class="author-block">* equal contributions</span>-->
+<!--          </div>-->
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- <span class="link-block">
+                <a href="https://arxiv.org/pdf/2408.08000"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv</span>
+                </a>
+              </span> -->
+              <!-- <span class="link-block">
+                <a href="https://github.com/ewrfcas/MVInpainter"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code and Model</span>
+                  </a>
+              </span> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="./static/images/overview.svg" style="max-width: 100%; height: auto;" />
+      <!-- <div style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <video autoplay muted loop style="max-width: 70%; height: auto;">
+          <source src="./static/videos/9_depth_final_h264.mp4" type="video/mp4">
+        </video>
+      </div> -->
+      <h2 class="subtitle has-text-justified">
+        <!-- <div class="content has-text-justified"> -->
+          An illustration of the VEIGAR inpainting and reconstruction pipeline. VEIGAR inpaints
+          a single anchor view and propagates edits to other views using deep stereo depth-based projection,
+          followed by completion and reconstruction guided by a scale-invariant depth loss. Compared to prior
+          methods like SPIn-NeRF, VEIGAR produces sharper and more view-consistent results.
+        <!-- </div> -->
+      </h2>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Abstract. -->
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          Recent advances in Novel View Synthesis (NVS) and 3D generation have significantly improved editing tasks, with a primary emphasis on maintaining cross-view consistency throughout the generative process. Contemporary methods typically address this challenge using a dual-strategy framework: performing consistent 2D inpainting across all views guided by embedded priors either explicitly in pixel space or implicitly in latent space; and conducting 3D reconstruction with additional consistency guidance. Prior-based strategies, in particular, often require an initial 3D reconstruction phase to establish geometric structure, introducing considerable computational overhead. Even with the added cost, the resulting reconstruction quality often remains suboptimal. In this paper, we present VEIGAR, a computationally efficient framework that outperforms existing methods without relying on an initial reconstruction phase. VEIGAR leverages a lightweight foundation model to reliably align priors explicitly in the pixel space. In addition, we introduce a novel supervision strategy based on scale-invariant depth loss, which removes the need for traditional scale-and-shift operations in monocular depth regularization. Extensive experiments demonstrate that VEIGAR sets a new benchmark in both reconstruction quality and cross-view consistency, while reducing training time by a factor of 3x compared to the fastest existing method, highlighting its superior balance of efficiency and effectiveness.
+        </div>
+      </div>
+    </div>
+    <!--/ Abstract. -->
+
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+
+    <!-- Animation. -->
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Overview</h2>
+
+        <!-- Interpolating. -->
+<!--        <div class="content has-text-justified">-->
+<!--          <p>-->
+<!--            We can also animate the scene by interpolating the deformation latent codes of two input-->
+<!--            frames. Use the slider here to linearly interpolate between the left frame and the right-->
+<!--            frame.-->
+<!--          </p>-->
+<!--        </div>-->
+          <br/>
+          <div class="columns is-vcentered interpolation-panel">
+            <img src="./static/images/pipeline.svg"
+                 class="interpolation-image"
+                 alt="Interpolate start reference image."/>
+          </div>
+        <br>
+        Pipeline overview. The first stage (a) performs stereo depth completion on an anchor view
+        and estimates implicit intrinsics to enable accurate projection of inpainted content to other views.
+        The second stage (b) uses a pretrained inpainting network to complete the masked regions in each
+        projected view. The resulting multi-view images are then used for 3D reconstruction via Gaussian
+        Splatting, guided by scale-invariant and photometric losses to ensure high-fidelity and geometrically
+        consistent outputs.
+        </div>
+        <br/>
+      </div>
+    </div>
+    <!--/ Animation. -->
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Animation. -->
+        <!-- Paper video. -->
+    <div class="columns is-centered">
+      <div class="column">
+          <h2 class="title is-3">Main Results</h2>
+          <div class="table-container">
+            <table class="table is-centered" style="border: none; margin: auto;">
+              <thead>
+                <tr>
+                  <th style="text-align: center;">Original</th>
+                  <th style="text-align: center;">In-N-Out</th>
+                  <th style="text-align: center;">GScream</th>
+                  <th style="text-align: center;">Our</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr>
+                  <td><img src="./static/images/ori1.png" style="max-width: 250px;"></td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/ino/1.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/gc/1_gc.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/1_depth_final_h264.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+          
+                <!-- Add more rows below as needed -->
+                <tr>
+                  <td><img src="./static/images/ori2.png" style="max-width: 250px;"></td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/ino/2.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/gc/2_gc.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/2_depth_final_h264.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+                <!-- Add more rows below as needed -->
+                <tr>
+                  <td><img src="./static/images/ori4.png" style="max-width: 250px;"></td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/ino/4.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/gc/4_gc.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/4_our.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+                <!-- Add more rows below as needed -->
+                <tr>
+                  <td><img src="./static/images/ori10.png" style="max-width: 250px;"></td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/ino/10_ino.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/gc/10_gc.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/10_our.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      </div>
+  </div>
+  </div>
+  <!--/ Animation. -->
+</section>
+
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <!-- Animation. -->
+        <!-- Paper video. -->
+    <div class="columns is-centered">
+      <div class="column">
+          <h2 class="title is-3">Ablation Results</h2>
+          <!-- <h2 class="title is-4">Results of multi-view inpainted images</h2> -->
+          <div class="table-container">
+            <table class="table is-centered" style="border: none; margin: auto;">
+              <thead>
+                <tr>
+                  <th colspan="2" style="text-align: center;">\( \text{Ours w/o } \mathcal{L}_{\text{SI}} \)</th>
+                  <th colspan="2" style="text-align: center;">\( \text{Ours}\)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/10_nd_rgb.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/10_nondepth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px">
+                      <source src="./static/videos/10_our.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/10_depth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+                
+                <!-- Add more rows below as needed -->
+                <tr>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/7_nd_rgb.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/7_nondepth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/7_depth_final_h264.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/7_depth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/12_nd_rgb.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/12_nondepth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/12_depth_final_h264.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                  <td>
+                    <video autoplay muted loop playsinline style="max-width: 250px;">
+                      <source src="./static/videos/depth/12_depth.mp4" type="video/mp4">
+                    </video>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      </div>
+  </div>
+  </div>
+  <!--/ Animation. -->
+</section>
+
+
+<!-- <section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>
+      @article{cao2024mvinpainter,
+        title={MVInpainter: Learning Multi-View Consistent Inpainting to Bridge 2D and 3D Editing},
+        author={Cao, Chenjie and Yu, Chaohui and Fu, Yanwei and Wang, Fan and Xue, Xiangyang},
+        journal={arXiv preprint arXiv:2408.08000},
+        year={2024}
+      }
+    </code></pre>
+  </div>
+</section> -->
+
+
+<footer class="footer">
+  <div class="container">
+    <!-- <div class="content has-text-centered"> -->
+      <!-- <a class="icon-link"
+         href="https://arxiv.org/pdf/2408.08000">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+      <a class="icon-link" href="https://github.com/ewrfcas/MVInpainter" class="external-link" disabled>
+        <i class="fab fa-github"></i>
+      </a> -->
+    <!-- </div> -->
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website is licensed under a <a rel="license"
+                                                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+          <p>
+            This means you  are free to borrow the <a
+              href="https://github.com/nerfies/nerfies.github.io">source code</a> of this website,
+            we just ask that you link back to this page in the footer.
+            Please remember to remove the analytics code included in the header of the website which
+            you do not want on your website.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
